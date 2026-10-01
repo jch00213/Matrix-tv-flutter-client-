@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:matrix/matrix.dart';
 import '../utils/responsive_extension.dart';
+import 'invite_user_dialog.dart'; // Import the invite user dialog
 
 class ChatScreen extends StatefulWidget {
   final Room room;
@@ -81,6 +82,19 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _showInviteDialog() async {
+    final invited = await showDialog<bool>(
+      context: context,
+      builder: (context) => InviteUserDialog(room: widget.room),
+    );
+
+    if (invited == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation sent successfully!')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool tvMode = context.isTv;
@@ -98,6 +112,14 @@ class _ChatScreenState extends State<ChatScreen> {
           widget.room.getLocalizedDisplayname(),
           style: TextStyle(fontSize: tvMode ? 24 : 20),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add),
+            tooltip: 'Invite User to Room',
+            onPressed: _showInviteDialog,
+          ),
+          SizedBox(width: tvMode ? 16 : 8),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
