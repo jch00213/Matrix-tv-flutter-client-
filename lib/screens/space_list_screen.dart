@@ -3,6 +3,7 @@ import 'package:matrix/matrix.dart';
 import 'room_list_screen.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
+import '../utils/responsive_extension.dart';
 
 class SpaceListScreen extends StatefulWidget {
   final Client client;
@@ -24,15 +25,19 @@ class _SpaceListScreenState extends State<SpaceListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool tvMode = context.isTv;
     final allRooms = widget.client.rooms;
     final spaces = allRooms.where((room) => room.isSpace).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Matrix TV - Spaces'),
+        title: Text(
+          'Matrix TV - Spaces',
+          style: TextStyle(fontSize: tvMode ? 24 : 20),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(Icons.settings, size: tvMode ? 28 : 24),
             tooltip: 'Settings',
             onPressed: () {
               Navigator.push(
@@ -43,18 +48,18 @@ class _SpaceListScreenState extends State<SpaceListScreen> {
               );
             },
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: tvMode ? 16 : 8),
         ],
       ),
       body: spaces.isEmpty
           ? RoomListScreen(client: widget.client)
           : GridView.builder(
-              padding: const EdgeInsets.all(24.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio: 1.5,
+              padding: EdgeInsets.all(context.defaultPadding),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: tvMode ? 3 : 2,
+                crossAxisSpacing: tvMode ? 20.0 : 16.0,
+                mainAxisSpacing: tvMode ? 20.0 : 16.0,
+                childAspectRatio: tvMode ? 1.6 : 1.5,
               ),
               itemCount: spaces.length,
               itemBuilder: (context, index) {
@@ -72,15 +77,22 @@ class _SpaceListScreenState extends State<SpaceListScreen> {
                       );
                     },
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(tvMode ? 20.0 : 16.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.folder_special, size: 40, color: Colors.blueAccent),
-                          const SizedBox(height: 12),
+                          Icon(
+                            Icons.folder_special,
+                            size: tvMode ? 48 : 40,
+                            color: Colors.blueAccent,
+                          ),
+                          SizedBox(height: tvMode ? 16 : 12),
                           Text(
                             space.getLocalizedDisplayname(),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: context.bodyTextSize + 1,
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
@@ -104,20 +116,30 @@ class SpaceDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool tvMode = context.isTv;
     final childRooms = space.spaceChildrenRooms;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(space.getLocalizedDisplayname()),
+        title: Text(
+          space.getLocalizedDisplayname(),
+          style: TextStyle(fontSize: tvMode ? 24 : 20),
+        ),
       ),
       body: childRooms.isEmpty
-          ? const Center(child: Text('No rooms found in this space.', style: TextStyle(color: Colors.grey)))
+          ? Center(
+              child: Text(
+                'No rooms found in this space.',
+                style: TextStyle(color: Colors.grey, fontSize: context.bodyTextSize),
+              ),
+            )
           : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(context.defaultPadding),
               itemCount: childRooms.length,
               itemBuilder: (context, index) {
                 final room = childRooms[index];
                 return Card(
+                  margin: EdgeInsets.symmetric(vertical: tvMode ? 8.0 : 4.0),
                   child: InkWell(
                     autofocus: index == 0,
                     onTap: () {
@@ -129,9 +151,23 @@ class SpaceDetailScreen extends StatelessWidget {
                       );
                     },
                     child: ListTile(
-                      leading: const Icon(Icons.chat),
-                      title: Text(room.getLocalizedDisplayname()),
-                      subtitle: Text(room.lastEvent?.body ?? 'No messages yet', maxLines: 1),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: tvMode ? 24.0 : 16.0,
+                        vertical: tvMode ? 8.0 : 4.0,
+                      ),
+                      leading: Icon(Icons.chat, size: tvMode ? 32 : 24),
+                      title: Text(
+                        room.getLocalizedDisplayname(),
+                        style: TextStyle(
+                          fontSize: context.bodyTextSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        room.lastEvent?.body ?? 'No messages yet',
+                        maxLines: 1,
+                        style: TextStyle(fontSize: context.bodyTextSize - 2),
+                      ),
                     ),
                   ),
                 );
