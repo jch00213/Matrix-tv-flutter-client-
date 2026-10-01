@@ -99,8 +99,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final bool tvMode = context.isTv;
 
+    // Filter strictly for actual message events to avoid showing state events like m.room.create, m.room.member, etc.
     final events = _timeline?.events
             .where((e) => 
+                e.type == 'm.room.message' && 
                 (e.messageType == MessageTypes.Text || e.messageType == MessageTypes.Notice) && 
                 e.body.isNotEmpty)
             .toList() ??
