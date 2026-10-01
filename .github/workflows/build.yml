@@ -5,6 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      target_device:
+        description: 'Select Target Device Architecture'
+        required: true
+        default: 'tv'
+        type: choice
+        options:
+          - tv
+          - phone
 
 permissions:
   contents: write
@@ -71,7 +80,26 @@ jobs:
           git commit -m "chore(version): auto-bump version to $NEW_VERSION [skip ci]" || echo "No changes to commit"
           git push || echo "Push skipped or unneeded"
 
-      # 2. Setup Android Keystore if secrets exist
+      # 2. Configure Target Architecture (TV vs Phone)
+      - name: Configure Target Architecture
+        id: set_target
+        run: |
+          TARGET="${{ github.event.inputs.target_device }}"
+          if [ -z "$TARGET" ]; then
+            TARGET="tv" # Fallback default for automated push events
+          fi
+          
+          if [ "$TARGET" == "phone" ]; then
+            echo "PLATFORM=android-arm64" >> $GITHUB_ENV
+            echo "APK_SUFFIX=phone-arm64" >> $GITHUB_ENV
+            echo "Targeting Android Phone (arm64)"
+          else
+            echo "PLATFORM=android-arm" >> $GITHUB_ENV
+            echo "APK_SUFFIX=tv-armv7a" >> $GITHUB_ENV
+            echo "Targeting Chromecast TV (armv7a)"
+          fi
+
+      # 3. Setup Android Keystore if secrets exist
       - name: Setup Android Keystore
         run: |
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
@@ -86,18 +114,24 @@ jobs:
             echo "No keystore secret provided. Skipping signing."
           fi
 
-      # 3. Build Optimized Release APK (will now embed the auto-incremented version)
+      # 4. Build Optimized Release APK for the selected target platform
       - name: Build Optimized APK Release
-        run: flutter build apk --release --target-platform android-arm
+        run: flutter build apk --release --target-platform ${{ env.PLATFORM }}
 
-      # 4. Upload release APK to GitHub Releases using the auto-written version tag
+      # 5. Rename APK to distinguish TV vs Phone builds
+      - name: Prepare APK Artifact
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/matrix-client-${{ env.APK_SUFFIX }}-v${{ steps.auto_version.outputs.version_number }}.apk
+
+      # 6. Upload release APK to GitHub Releases using the auto-written version tag
       - name: Upload Release APK to GitHub
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/*.apk
+          files: dist/*.apk
           name: Release v${{ steps.auto_version.outputs.version_number }}
           tag_name: ${{ steps.auto_version.outputs.tag_name }}
-          body: "Fully automated build and version bump to v${{ steps.auto_version.outputs.version_number }}."
+          body: "Fully automated build and version bump to v${{ steps.auto_version.outputs.version_number }} (${{ env.APK_SUFFIX }})."
           draft: false
           prerelease: false
         env:
