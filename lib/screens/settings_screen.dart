@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/update_service.dart';
 import '../services/app_webserver.dart';
+import '../utils/responsive_extension.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -141,21 +142,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool tvMode = context.isTv;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text('Settings', style: TextStyle(fontSize: tvMode ? 24 : 20)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 64.0, vertical: 24.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: tvMode ? 64.0 : 24.0,
+          vertical: tvMode ? 24.0 : 16.0,
+        ),
         child: ListView(
           children: [
-            const Text(
+            Text(
               'Application Settings',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: tvMode ? 28 : 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: tvMode ? 24 : 16),
             
             // 1. Web Server Control Tile
             Focus(
@@ -172,11 +182,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return Card(
                     color: hasFocus ? const Color(0xFF03DAC6) : const Color(0xFF2C2C2C),
                     child: SwitchListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: tvMode ? 24.0 : 16.0,
+                        vertical: tvMode ? 8.0 : 4.0,
+                      ),
                       title: Text(
                         'Local Web Control Panel (Port 8086)',
                         style: TextStyle(
                           color: hasFocus ? Colors.black : Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: context.bodyTextSize,
                         ),
                       ),
                       subtitle: Text(
@@ -185,6 +200,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           color: hasFocus 
                               ? Colors.black54 
                               : (_webserver.lastError != null ? Colors.redAccent : Colors.white70),
+                          fontSize: context.bodyTextSize - 2,
                         ),
                       ),
                       secondary: _isServerToggling
@@ -196,6 +212,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           : Icon(
                               Icons.dns,
                               color: hasFocus ? Colors.black : const Color(0xFF03DAC6),
+                              size: tvMode ? 32 : 24,
                             ),
                       value: _webserver.isRunning,
                       onChanged: _isServerToggling 
@@ -206,7 +223,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: tvMode ? 16 : 12),
 
             // 2. Start on Login Toggle Tile
             Focus(
@@ -216,11 +233,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return Card(
                     color: hasFocus ? const Color(0xFF03DAC6) : const Color(0xFF2C2C2C),
                     child: SwitchListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: tvMode ? 24.0 : 16.0,
+                        vertical: tvMode ? 8.0 : 4.0,
+                      ),
                       title: Text(
                         'Start Web Server on App Login',
                         style: TextStyle(
                           color: hasFocus ? Colors.black : Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: context.bodyTextSize,
                         ),
                       ),
                       subtitle: Text(
@@ -229,11 +251,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             : 'Manual start only',
                         style: TextStyle(
                           color: hasFocus ? Colors.black54 : Colors.white70,
+                          fontSize: context.bodyTextSize - 2,
                         ),
                       ),
                       secondary: Icon(
                         Icons.login,
                         color: hasFocus ? Colors.black : const Color(0xFF03DAC6),
+                        size: tvMode ? 32 : 24,
                       ),
                       value: _autoStartOnLogin,
                       onChanged: (val) => _toggleAutoStartOnLogin(val),
@@ -242,7 +266,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: tvMode ? 16 : 12),
 
             // 3. Display Over Other Apps Permission Tile (Overlay Fallback)
             Focus(
@@ -252,22 +276,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return Card(
                     color: hasFocus ? const Color(0xFF03DAC6) : const Color(0xFF2C2C2C),
                     child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: tvMode ? 24.0 : 16.0,
+                        vertical: tvMode ? 8.0 : 4.0,
+                      ),
                       title: Text(
                         'Display Over Other Apps Permission',
                         style: TextStyle(
                           color: hasFocus ? Colors.black : Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: context.bodyTextSize,
                         ),
                       ),
                       subtitle: Text(
                         'Grant system overlay permission for fallback popups',
                         style: TextStyle(
                           color: hasFocus ? Colors.black54 : Colors.white70,
+                          fontSize: context.bodyTextSize - 2,
                         ),
                       ),
                       trailing: Icon(
                         Icons.layers,
                         color: hasFocus ? Colors.black : const Color(0xFF03DAC6),
+                        size: tvMode ? 32 : 24,
                       ),
                       onTap: _requestOverlayPermission,
                     ),
@@ -275,7 +306,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: tvMode ? 16 : 12),
 
             // 4. Check for Updates Tile
             Focus(
@@ -285,17 +316,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return Card(
                     color: hasFocus ? const Color(0xFF03DAC6) : const Color(0xFF2C2C2C),
                     child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: tvMode ? 24.0 : 16.0,
+                        vertical: tvMode ? 8.0 : 4.0,
+                      ),
                       title: Text(
                         _isCheckingUpdate ? 'Updating...' : 'Check for Updates',
                         style: TextStyle(
                           color: hasFocus ? Colors.black : Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: context.bodyTextSize,
                         ),
                       ),
                       subtitle: Text(
                         _updateStatus.isNotEmpty ? _updateStatus : 'Current version: $_appVersion',
                         style: TextStyle(
                           color: hasFocus ? Colors.black54 : Colors.white70,
+                          fontSize: context.bodyTextSize - 2,
                         ),
                       ),
                       trailing: _isCheckingUpdate
@@ -307,6 +344,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           : Icon(
                               Icons.system_update,
                               color: hasFocus ? Colors.black : const Color(0xFF03DAC6),
+                              size: tvMode ? 32 : 24,
                             ),
                       onTap: _isCheckingUpdate ? null : _handleCheckForUpdates,
                     ),
@@ -314,7 +352,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: tvMode ? 16 : 12),
 
             // 5. Logout / Sign Out Tile
             Focus(
@@ -324,22 +362,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return Card(
                     color: hasFocus ? Colors.redAccent : const Color(0xFF2C2C2C),
                     child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: tvMode ? 24.0 : 16.0,
+                        vertical: tvMode ? 8.0 : 4.0,
+                      ),
                       title: Text(
                         'Log Out',
                         style: TextStyle(
                           color: hasFocus ? Colors.white : Colors.redAccent,
                           fontWeight: FontWeight.bold,
+                          fontSize: context.bodyTextSize,
                         ),
                       ),
                       subtitle: Text(
                         'Disconnect session from homeserver (${widget.client.userID ?? ""})',
                         style: TextStyle(
                           color: hasFocus ? Colors.white70 : Colors.white54,
+                          fontSize: context.bodyTextSize - 2,
                         ),
                       ),
                       trailing: Icon(
                         Icons.logout,
                         color: hasFocus ? Colors.white : Colors.redAccent,
+                        size: tvMode ? 32 : 24,
                       ),
                       onTap: () async {
                         await _webserver.stop();
