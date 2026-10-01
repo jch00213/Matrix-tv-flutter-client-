@@ -110,9 +110,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.room.getLocalizedDisplayname(),
-          style: TextStyle(fontSize: tvMode ? 24 : 20),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.room.getLocalizedDisplayname(),
+              style: TextStyle(fontSize: tvMode ? 24 : 20),
+            ),
+            Text(
+              widget.room.id,
+              style: TextStyle(
+                fontSize: tvMode ? 14 : 11,
+                color: Colors.white64,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
