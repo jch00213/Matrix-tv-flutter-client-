@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Visibility;
 import 'package:matrix/matrix.dart';
 
 class CreateRoomDialog extends StatefulWidget {
@@ -31,18 +31,17 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // In matrix package v12, public/private state is controlled via history_visibility 
-      // and join_rules, or sent via creation content.
       await widget.client.createRoom(
         name: name,
         topic: _topicController.text.trim().isEmpty ? null : _topicController.text.trim(),
         visibility: _isPublic ? Visibility.public : Visibility.private,
         initialState: _isSpace
             ? [
-                Event(
-                  type: EventTypes.roomCreate,
-                  content: {'type': 'm.space'},
-                ),
+                Event.fromJson({
+                  'type': 'm.room.create',
+                  'content': {'type': 'm.space'},
+                  'sender': widget.client.userID ?? '',
+                }, null)
               ]
             : null,
       );
