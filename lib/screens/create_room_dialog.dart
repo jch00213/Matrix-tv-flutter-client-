@@ -4,7 +4,7 @@ import 'package:matrix/matrix.dart';
 class CreateRoomDialog extends StatefulWidget {
   final Client client;
 
-  const CreateRoomDialog({Key? key, required this.client}) : super(key: key);
+  const CreateRoomDialog({super.key, required this.client});
 
   @override
   State<CreateRoomDialog> createState() => _CreateRoomDialogState();
@@ -31,12 +31,22 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
     setState(() => _isLoading = true);
 
     try {
+      // In matrix package v12, public/private state is controlled via history_visibility 
+      // and join_rules, or sent via creation content.
       await widget.client.createRoom(
         name: name,
         topic: _topicController.text.trim().isEmpty ? null : _topicController.text.trim(),
-        isSpace: _isSpace,
-        preset: _isPublic ? Preset.publicChat : Preset.privateChat,
+        visibility: _isPublic ? Visibility.public : Visibility.private,
+        initialState: _isSpace
+            ? [
+                Event(
+                  type: EventTypes.roomCreate,
+                  content: {'type': 'm.space'},
+                ),
+              ]
+            : null,
       );
+
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to trigger a refresh
       }
@@ -64,7 +74,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
           children: [
             TextField(
               controller: _nameController,
-              autofocus: true, // Automatically focuses for TV remote D-pad
+              autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Name',
                 hintText: 'e.g. Media Hub or General Chat',
