@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:matrix/matrix.dart';
+import '../utils/responsive_extension.dart';
 
 class ChatScreen extends StatefulWidget {
   final Room room;
@@ -82,6 +83,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool tvMode = context.isTv;
+
     final events = _timeline?.events
             .where((e) => 
                 (e.messageType == MessageTypes.Text || e.messageType == MessageTypes.Notice) && 
@@ -91,7 +94,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.room.getLocalizedDisplayname()),
+        title: Text(
+          widget.room.getLocalizedDisplayname(),
+          style: TextStyle(fontSize: tvMode ? 24 : 20),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -99,10 +105,10 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 Expanded(
                   child: events.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
                             'No messages in this room yet. Say hello!',
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(color: Colors.grey, fontSize: context.bodyTextSize),
                           ),
                         )
                       : Focus(
@@ -138,12 +144,15 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: Scrollbar(
                             controller: _scrollController,
                             thumbVisibility: true,
-                            thickness: 8.0,
+                            thickness: tvMode ? 10.0 : 8.0,
                             radius: const Radius.circular(4),
                             child: ListView.builder(
                               reverse: true,
                               controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: context.defaultPadding,
+                                vertical: tvMode ? 16.0 : 12.0,
+                              ),
                               itemCount: events.length,
                               itemBuilder: (context, index) {
                                 final event = events[events.length - 1 - index];
@@ -153,10 +162,13 @@ class _ChatScreenState extends State<ChatScreen> {
                                   alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                                   child: Container(
                                     constraints: BoxConstraints(
-                                      maxWidth: MediaQuery.of(context).size.width * 0.70,
+                                      maxWidth: MediaQuery.of(context).size.width * (tvMode ? 0.60 : 0.70),
                                     ),
-                                    margin: const EdgeInsets.symmetric(vertical: 4.0),
-                                    padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                                    margin: EdgeInsets.symmetric(vertical: tvMode ? 6.0 : 4.0),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: tvMode ? 18.0 : 14.0,
+                                      vertical: tvMode ? 14.0 : 10.0,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: isMe ? Colors.teal.shade700 : Colors.grey.shade800,
                                       borderRadius: BorderRadius.circular(12),
@@ -167,17 +179,20 @@ class _ChatScreenState extends State<ChatScreen> {
                                         if (!isMe) ...[
                                           Text(
                                             event.senderFromMemoryOrFallback.calcDisplayname(),
-                                            style: const TextStyle(
-                                              fontSize: 11,
+                                            style: TextStyle(
+                                              fontSize: tvMode ? 13 : 11,
                                               color: Colors.tealAccent,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          const SizedBox(height: 2),
+                                          SizedBox(height: tvMode ? 4 : 2),
                                         ],
                                         Text(
                                           event.body,
-                                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: context.bodyTextSize,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -190,27 +205,30 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 const Divider(height: 1),
                 Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: EdgeInsets.all(context.defaultPadding),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _messageController,
                           autofocus: false,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
+                          style: TextStyle(color: Colors.white, fontSize: context.bodyTextSize),
+                          decoration: InputDecoration(
                             hintText: 'Type a message...',
-                            hintStyle: TextStyle(color: Colors.white54),
-                            border: OutlineInputBorder(),
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            border: const OutlineInputBorder(),
                             filled: true,
-                            fillColor: Color(0xFF1E1E1E),
+                            fillColor: const Color(0xFF1E1E1E),
+                            contentPadding: EdgeInsets.all(tvMode ? 16.0 : 12.0),
                           ),
                           onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: tvMode ? 16 : 8),
                       IconButton.filled(
                         onPressed: _sendMessage,
+                        iconSize: tvMode ? 28 : 24,
+                        padding: EdgeInsets.all(tvMode ? 16 : 12),
                         icon: const Icon(Icons.send),
                       ),
                     ],
