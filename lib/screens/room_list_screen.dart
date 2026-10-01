@@ -3,6 +3,7 @@ import 'package:matrix/matrix.dart';
 import '../utils/responsive_extension.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
+import 'create_room_dialog.dart';
 
 class RoomListScreen extends StatefulWidget {
   final Client client;
@@ -22,6 +23,20 @@ class _RoomListScreenState extends State<RoomListScreen> {
     });
   }
 
+  Future<void> _showCreateDialog() async {
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) => CreateRoomDialog(client: widget.client),
+    );
+
+    if (created == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Room or Space created successfully!')),
+      );
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final rooms = widget.client.rooms;
@@ -31,6 +46,13 @@ class _RoomListScreenState extends State<RoomListScreen> {
       appBar: AppBar(
         title: Text(tvMode ? 'Matrix TV Rooms' : 'Matrix Rooms'),
         actions: [
+          // Create Room / Space Button
+          IconButton(
+            icon: const Icon(Icons.add_box),
+            tooltip: 'Create Room or Space',
+            onPressed: _showCreateDialog,
+          ),
+          SizedBox(width: tvMode ? 8 : 4),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Settings',
