@@ -121,7 +121,7 @@ class _ChatScreenState extends State<ChatScreen> {
               widget.room.id,
               style: TextStyle(
                 fontSize: tvMode ? 14 : 11,
-                color: Colors.white64,
+                color: Colors.white60, // Fixed: Colors.white60 is supported
                 fontWeight: FontWeight.normal,
               ),
             ),
