@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:matrix/matrix.dart';
 import 'room_list_screen.dart';
 import '../services/app_webserver.dart';
+import '../utils/responsive_extension.dart';
 
 class LoginScreen extends StatefulWidget {
   final Client client;
@@ -74,14 +75,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool tvMode = context.isTv;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(context.defaultPadding),
           child: Center(
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 450),
-              padding: const EdgeInsets.all(32.0),
+              constraints: BoxConstraints(maxWidth: tvMode ? 650 : 450),
+              padding: EdgeInsets.all(tvMode ? 40.0 : 32.0),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(16),
@@ -97,43 +100,46 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.chat_bubble_outline,
-                    size: 48,
-                    color: Color(0xFF03DAC6),
+                    size: tvMode ? 64 : 48,
+                    color: const Color(0xFF03DAC6),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: tvMode ? 20 : 16),
+                  Text(
                     'Matrix TV Sign In',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: tvMode ? 28 : 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: tvMode ? 28 : 24),
                   TextField(
                     controller: _homeserverController,
+                    style: TextStyle(fontSize: context.bodyTextSize),
                     decoration: const InputDecoration(
                       labelText: 'Homeserver URL',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.dns_outlined),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: tvMode ? 20 : 16),
                   TextField(
                     controller: _usernameController,
+                    style: TextStyle(fontSize: context.bodyTextSize),
                     decoration: const InputDecoration(
                       labelText: 'Username or Matrix ID',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person_outline),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: tvMode ? 20 : 16),
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
+                    style: TextStyle(fontSize: context.bodyTextSize),
                     decoration: const InputDecoration(
                       labelText: 'Password',
                       border: OutlineInputBorder(),
@@ -142,37 +148,41 @@ class _LoginScreenState extends State<LoginScreen> {
                     onSubmitted: (_) => _isLoading ? null : _handleLogin(),
                   ),
                   if (_errorMessage.isNotEmpty) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: tvMode ? 20 : 16),
                     Text(
                       _errorMessage,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                      style: TextStyle(color: Colors.redAccent, fontSize: context.bodyTextSize - 2),
                       textAlign: TextAlign.center,
                     ),
                   ],
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF03DAC6),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  SizedBox(height: tvMode ? 32 : 24),
+                  SizedBox(
+                    height: tvMode ? 56 : 48,
+                    child: ElevatedButton(
+                      autofocus: tvMode, // Automatically grabs D-pad focus on TV launch
+                      onPressed: _isLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF03DAC6),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.black,
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
+                            )
+                          : Text(
+                              'Connect',
+                              style: TextStyle(fontSize: tvMode ? 18 : 16, fontWeight: FontWeight.bold),
                             ),
-                          )
-                        : const Text(
-                            'Connect',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                    ),
                   ),
                 ],
               ),
