@@ -14,7 +14,7 @@ class MatrixForegroundService : Service() {
 
     companion object {
         const val CHANNEL_ID = "matrix_foreground_channel"
-        const val MESSAGE_CHANNEL_ID = "matrix_message_popup_channel" // High priority channel for popups
+        const val MESSAGE_CHANNEL_ID = "matrix_message_popup_channel"
         const val NOTIFICATION_ID = 1337
         const val ACTION_START = "START_FOREGROUND"
         const val ACTION_STOP = "STOP_FOREGROUND"
@@ -39,7 +39,11 @@ class MatrixForegroundService : Service() {
                 putExtra(EXTRA_TITLE, title)
                 putExtra(EXTRA_BODY, body)
             }
-            context.startService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
     }
 
@@ -51,11 +55,15 @@ class MatrixForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // CRITICAL: Satisfy Android 14+ foreground service timeout requirement immediately
+        val persistentNotification = createPersistentNotification(
+            "Matrix TV Service Running", 
+            "Listening for background events & web requests..."
+        )
+        startForeground(NOTIFICATION_ID, persistentNotification)
+
+        // Now handle specific intents safely
         when (intent?.action) {
-            ACTION_START -> {
-                val notification = createPersistentNotification("Matrix TV Service Running", "Listening for background events & web requests...")
-                startForeground(NOTIFICATION_ID, notification)
-            }
             ACTION_SHOW_MESSAGE -> {
                 val title = intent.getStringExtra(EXTRA_TITLE) ?: "Matrix Message"
                 val body = intent.getStringExtra(EXTRA_BODY) ?: ""
@@ -66,6 +74,7 @@ class MatrixForegroundService : Service() {
                 stopSelf()
             }
         }
+        
         return START_STICKY
     }
 
@@ -73,7 +82,6 @@ class MatrixForegroundService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            // 1. Low priority persistent channel for the foreground service icon
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Matrix Background Service",
@@ -83,7 +91,6 @@ class MatrixForegroundService : Service() {
             }
             manager.createNotificationChannel(serviceChannel)
 
-            // 2. High priority channel for incoming message popups (Heads-Up banner on Android 14 TV)
             val messageChannel = NotificationChannel(
                 MESSAGE_CHANNEL_ID,
                 "Matrix Message Popups",
@@ -109,7 +116,6 @@ class MatrixForegroundService : Service() {
     private fun dispatchMessageNotification(title: String, body: String) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         
-        // Use MESSAGE_CHANNEL_ID with IMPORTANCE_HIGH to force a native popup banner on Android 14 TV
         val messageNotification = NotificationCompat.Builder(this, MESSAGE_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
